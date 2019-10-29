@@ -19,6 +19,36 @@ module MyModule
       # Empty array to collect all errors across the site
       total_errors = Array.new
 
+      # All markdown validator
+
+
+      site.documents.each do |d|
+        puts d.path
+        document_errors = Array.new
+
+        if Regexp.new("_posts/") =~ d.path
+          basename = d.path.split("/").last()
+          unless Regexp.new("\d{4}-\d{2}-\d{2}(?:-[A-Za-z0-9]+)+\.md")
+            document_errors.push('Posts must be named "YYYY-MM-DD-title-here.md" using only hyphens between words.')
+          end
+        end
+
+        unless document_errors.empty?
+          # Throw a warning with the filename
+          warn format_red("* In #{d.dir}#{d.name}:")
+
+          # Add some formatting to the errors and then throw them
+          unit_errors = document_errors.map{|e| "  - [ ] #{e}"}
+
+          unit_errors.each do |e|
+            warn format_red(e)
+          end
+
+          # Finally, add all errors on the page to the master error list
+          total_errors.concat(document_errors)
+        end
+      end
+
       # All pages validator
 
       all_pages = site.pages.select{|i| !i.data["skip_validation"]}
